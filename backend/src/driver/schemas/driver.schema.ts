@@ -6,7 +6,6 @@ export interface Review {
 }
 
 export interface Driver extends Document {
-  _id: string;
   name: string;
   description: string;
   car: string;
@@ -16,7 +15,7 @@ export interface Driver extends Document {
 }
 
 export const DriverSchema = new Schema<Driver>({
-  id: { type: String, required: true },
+
   name: { type: String, required: true },
   description: { type: String, required: true },
   car: { type: String, required: true },

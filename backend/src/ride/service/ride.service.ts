@@ -1,15 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { DriverService } from '../driver/driver.service';
+import { DriverService } from '../../driver/driver.service';
 import { ConfigService } from '@nestjs/config';
-import { EstimateRideDto } from './dto/estimate-ride.dto';
+import { RideEstimateDto } from '../dto/ride-estimate.dto';
 import {
   Coordinates,
   GeocodeResponse,
   RouteRequestBody,
   RouteResponse,
-} from './models/Models';
-import { RideEstimateResponseDto } from './dto/RideEstimateResponseDto';
+} from '../model/Models';
+import { RideEstimateResponseDto } from '../dto/ride-estimate-response.dto';
 import { HttpService } from '@nestjs/axios';
+import { ConfirmRideDto } from '../dto/confirm-ride.dto';
+import { RideRepository } from '../ride.repository';
+import { Ride } from '../ride.schema';
 
 @Injectable()
 export class RideService {
@@ -19,12 +22,13 @@ export class RideService {
     private readonly driverService: DriverService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
+    private readonly rideReposirory: RideRepository,
   ) {
     this.apiKey = this.configService.get<string>('GOOGLE_API_KEY');
   }
 
   // Function to estimate a ride
-  async estimateRide(data: EstimateRideDto) {
+  async estimateRide(data: RideEstimateDto) {
     this.validateData(data);
 
     // Get coordinates from origin and destination
@@ -70,7 +74,7 @@ export class RideService {
     );
   }
 
-  private validateData(data: EstimateRideDto) {
+  private validateData(data: RideEstimateDto) {
     if (data.origin === data.destination) {
       throw new HttpException(
         {
@@ -156,5 +160,98 @@ export class RideService {
       );
     }
     return response.data;
+  }
+
+  async confirmRide(confirmRideDto: ConfirmRideDto): Promise<void> {
+    const { distance, driver } = confirmRideDto;
+
+    // Validações
+    this.validateOriginAndDestination(confirmRideDto);
+
+    // Verificar se o motorista é válido
+    const foundDriver = await this.driverService.validateDriver(driver.id);
+
+    if (!foundDriver) {
+      throw new HttpException(
+        {
+          error_code: 'DRIVER_NOT_FOUND',
+          error_description: 'Motorista não encontrado.',
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    // Verificar se a quilometragem é válida para o motorista
+    if (foundDriver.minKm > distance) {
+      throw new HttpException(
+        {
+          error_code: 'INVALID_DISTANCE',
+          error_description:
+            'Quilometragem inválida para o motorista selecionado.',
+        },
+        HttpStatus.NOT_ACCEPTABLE,
+      );
+    }
+    // Salvar os dados da viagem no banco de dados
+    await this.rideReposirory.saveRide(
+      this.mapConfirmRideDtoToRide(confirmRideDto),
+    );
+  }
+
+  async getRides(customerId: string, driverId?: string) {
+    const query: any = { customer_id: customerId };
+
+    if (driverId) {
+      query.driverId = driverId;
+    }
+
+    const rides = await this.rideReposirory.find(query);
+
+    // Add driver information
+    const enrichedRides = await Promise.all(
+      rides.map(async (ride) => {
+        const driver = await this.driverService.getDriverById(ride.driver_id);
+        return {
+          id: ride._id, // Use o `id` em vez de `_id` para simplificar
+          customer_id: ride.customer_id,
+          origin: ride.origin,
+          destination: ride.destination,
+          distance: ride.distance,
+          duration: ride.duration,
+          value: ride.value,
+          driver: {
+            id: driver.id,
+            name: driver.name,
+          },
+        };
+      }),
+    );
+
+    return enrichedRides;
+  }
+
+  private validateOriginAndDestination(data: ConfirmRideDto): void {
+    const { origin, destination } = data;
+    if (origin === destination) {
+      throw new HttpException(
+        {
+          error_code: 'INVALID_DATA',
+          error_description: 'Origem e destino não podem ser iguais.',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  mapConfirmRideDtoToRide(confirmRideDto: ConfirmRideDto): Ride {
+    return {
+      customer_id: confirmRideDto.customer_id,
+      origin: confirmRideDto.origin,
+      destination: confirmRideDto.destination,
+      distance: confirmRideDto.distance,
+      duration: confirmRideDto.duration,
+      driver_id: confirmRideDto.driver.id,
+      value: confirmRideDto.value,
+    } as Ride;
   }
 }

@@ -1,14 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import {Model, ObjectId, Types} from 'mongoose';
 import { Driver } from './schemas/driver.schema';
-import { AvailableDriver } from '../ride/models/Models';
+import { AvailableDriver } from '../ride/model/Models';
 
 @Injectable()
 export class DriverService {
   constructor(
     @InjectModel('Driver') private readonly driverModel: Model<Driver>,
-
   ) {}
 
   async createDriver(driverData: Partial<Driver>): Promise<Driver> {
@@ -19,13 +18,14 @@ export class DriverService {
   async getAllDrivers(): Promise<Driver[]> {
     return this.driverModel.find().exec();
   }
+
   async getAvailableDrivers(distanceInKm: number): Promise<AvailableDriver[]> {
     const drivers = await this.getAllDrivers();
 
     return drivers
       .filter((driver) => distanceInKm >= driver.minKm)
       .map((driver) => ({
-        id: driver._id,
+        id: driver.id,
         name: driver.name,
         description: driver.description,
         vehicle: driver.car,
@@ -36,7 +36,7 @@ export class DriverService {
   }
 
   async getDriverById(driverId: string): Promise<Driver | null> {
-    return this.driverModel.findById(driverId).exec();
+    return this.driverModel.findOne({ id: driverId }).exec();
   }
 
   async updateDriver(
@@ -50,5 +50,17 @@ export class DriverService {
 
   async deleteDriver(driverId: string): Promise<Driver | null> {
     return this.driverModel.findByIdAndDelete(driverId).exec();
+  }
+
+  async validateDriver(id: string): Promise<Driver | null> {
+    return await this.driverModel.findOne({ id: id }).exec();
+  }
+
+  async validateDistance(id: string, distance: number) {
+    const driver = await this.driverModel.findById(id).exec();
+    if (!driver) {
+      throw new Error('Driver not found');
+    }
+    return distance >= driver.minKm;
   }
 }

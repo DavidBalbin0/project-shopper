@@ -1,16 +1,24 @@
 import React from 'react';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import theme from './theme';
-import Home from './pages/Home';
+import {Link, Route, BrowserRouter as Router, Routes} from 'react-router-dom';
+import Home from "./pages/Home";
+import NotFound from "./pages/NotFound";
+import {Container} from "@mui/material";
+import ConfirmRide from './pages/ConfirmRide';
+import RideHistory from "./pages/RideHistory";
 
-function App() {
-  return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Home />
-      </ThemeProvider>
-  );
-}
+const App: React.FC = () => {
+    return (
+        <Container>
+            <Router>
+                <Routes>
+                    <Route path="/" element={<Home/>}/>
+                    <Route path="/confirm-ride" element={<ConfirmRide />} />
+                    <Route path="*" element={<NotFound/>}/>
+                    <Route path="/ride-history" element={<RideHistory />} />
+                </Routes>
+            </Router>
+        </Container>
+    );
+};
 
 export default App;

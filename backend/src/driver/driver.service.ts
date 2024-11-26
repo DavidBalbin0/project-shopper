@@ -1,22 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import {Model, ObjectId, Types} from 'mongoose';
-import { Driver } from './schemas/driver.schema';
+
 import { AvailableDriver } from '../ride/model/Models';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Driver } from './driver.entity';
 
 @Injectable()
-export class DriverService {
+export class DriverRepository {
   constructor(
-    @InjectModel('Driver') private readonly driverModel: Model<Driver>,
+    @InjectRepository(Driver)
+    private readonly driverRepository: Repository<Driver>,
   ) {}
 
-  async createDriver(driverData: Partial<Driver>): Promise<Driver> {
-    const createdDriver = new this.driverModel(driverData);
-    return createdDriver.save();
-  }
-
   async getAllDrivers(): Promise<Driver[]> {
-    return this.driverModel.find().exec();
+    return this.driverRepository.find();
   }
 
   async getAvailableDrivers(distanceInKm: number): Promise<AvailableDriver[]> {
@@ -29,38 +26,22 @@ export class DriverService {
         name: driver.name,
         description: driver.description,
         vehicle: driver.car,
-        review: driver.review,
+        review: {
+          rating: driver.review,
+          comment: driver.comment,
+        },
         value: parseFloat((distanceInKm * driver.ratePerKm).toFixed(2)),
       }))
       .sort((a, b) => a.value - b.value);
   }
 
-  async getDriverById(driverId: string): Promise<Driver | null> {
-    return this.driverModel.findOne({ id: driverId }).exec();
+  async getDriverById(driverId: number): Promise<Driver | null> {
+    return this.driverRepository.findOne({
+      where: { id: driverId },
+    });
   }
 
-  async updateDriver(
-    driverId: string,
-    updateData: Partial<Driver>,
-  ): Promise<Driver | null> {
-    return this.driverModel
-      .findByIdAndUpdate(driverId, updateData, { new: true })
-      .exec();
-  }
-
-  async deleteDriver(driverId: string): Promise<Driver | null> {
-    return this.driverModel.findByIdAndDelete(driverId).exec();
-  }
-
-  async validateDriver(id: string): Promise<Driver | null> {
-    return await this.driverModel.findOne({ id: id }).exec();
-  }
-
-  async validateDistance(id: string, distance: number) {
-    const driver = await this.driverModel.findById(id).exec();
-    if (!driver) {
-      throw new Error('Driver not found');
-    }
-    return distance >= driver.minKm;
+  async validateDriver(id: number): Promise<Driver | null> {
+    return this.getDriverById(id);
   }
 }

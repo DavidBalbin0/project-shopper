@@ -55,8 +55,24 @@ services:
     networks:
       - shopper-network
 
+    postgres:
+      image: postgres:15
+      container_name: postgres-db
+      restart: always
+      ports:
+        - "5432:5432"
+      environment:
+        POSTGRES_USER: nestuser
+        POSTGRES_PASSWORD: nestpassword
+        POSTGRES_DB: shopperdb
+      volumes:
+        - postgres_data:/var/lib/postgresql/data
+
+
 networks:
   shopper-network:
     driver: bridge
+
 volumes:
   mongodb_data:
+  postgres_data:

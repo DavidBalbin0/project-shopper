@@ -16,10 +16,16 @@ const RequestRideForm:  React.FC<RequestRideFormProps> = ({ onSubmit, errorMessa
     };
 
     return (
-        <Box sx={{ maxWidth: 400, mx: 'auto', mt: 4, p: 2, boxShadow: 3 }}>
-            <Typography variant="h5" gutterBottom>
-                Solicitar Viagem
-            </Typography>
+        <Box sx={{
+            maxWidth: 400,
+            mx: 'auto',
+            mt: 4,
+            p: 2,
+            boxShadow: 3,
+            bgcolor: 'white',
+            borderRadius:4,
+
+        }}>
             {Array.isArray(errorMessages) && errorMessages.length > 0 && (
                 <Alert severity="error" sx={{ mb: 2 }}>
                     {errorMessages.map((msg, index) => (
@@ -51,8 +57,19 @@ const RequestRideForm:  React.FC<RequestRideFormProps> = ({ onSubmit, errorMessa
                 required
                 margin="normal"
             />
-            <Button type="submit" onClick={handleSubmit} variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
-                Estimar Valor da Viagem
+            <Button type="submit" onClick={handleSubmit} variant="contained" color="info" fullWidth sx={{
+                mt: 2,
+
+            }}>
+                <Typography
+                    variant="h6"
+                sx={{
+                    fontWeight: 'bold',
+                    color: 'white',
+                    padding: 1
+                }}>
+                    Planejar Viagem
+                </Typography>
             </Button>
         </Box>
     );

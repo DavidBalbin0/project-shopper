@@ -7,12 +7,15 @@ const theme = createTheme({
         },
         primary: {
                 main: '#59FF57',
-                dark: '#001C71',
+        },
+        info: {
+            main: '#001C71',
         },
         secondary: {
             main: '#323232',
             light: '#D9D9D9'
-        }
+        },
+
     }
 });
 

@@ -26,7 +26,7 @@ import {Ride} from "./ride/ride.entity";
       port: 5432,
       username: 'nestuser',
       password: 'nestpassword',
-      database: 'nestdb',
+      database: 'shopperdb',
       entities: [Driver, Ride],
       synchronize: true, // Use apenas em desenvolvimento
     }),

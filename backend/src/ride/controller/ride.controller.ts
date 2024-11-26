@@ -10,6 +10,7 @@ import {
   Get,
   Param,
   Query,
+  HttpCode,
 } from '@nestjs/common';
 import { RideService } from '../service/ride.service';
 import { RideEstimateDto } from '../dto/ride-estimate.dto';
@@ -25,6 +26,7 @@ export class RideController {
   ) {}
 
   @Post('estimate')
+  @HttpCode(200)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async estimateRide(
     @Body() rideDto: RideEstimateDto,
@@ -38,7 +40,7 @@ export class RideController {
       throw new HttpException(
         {
           error_code: 'INTERNAL_ERROR',
-          error_description: 'Ocorreu um erro inesperado.',
+          message: 'Ocorreu um erro inesperado.',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -67,8 +69,8 @@ export class RideController {
 
   @Get('/:customer_id')
   async getRides(
-    @Param('customer_id') customerId: string,
-    @Query('driver_id') driverId?: string,
+    @Param('customer_id') customerId: number,
+    @Query('driver_id') driverId?: number,
   ) {
     // Validações
     if (!customerId) {

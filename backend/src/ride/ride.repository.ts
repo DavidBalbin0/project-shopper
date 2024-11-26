@@ -1,17 +1,35 @@
 import { Injectable } from '@nestjs/common';
-import { Ride } from './ride.schema';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
+
+import { InjectRepository } from '@nestjs/typeorm';
+import { Ride } from './ride.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class RideRepository {
-  constructor(@InjectModel('Ride') private rideModel: Model<Ride>) {}
+  constructor(
+    @InjectRepository(Ride)
+    private readonly rideRepository: Repository<Ride>,
+  ) {}
 
-  async saveRide(rideData: Ride): Promise<Ride> {
-    const createdRide = new this.rideModel(rideData);
-    return createdRide.save();
+  async saveRide(rideData: Partial<Ride>): Promise<Ride> {
+    const ride = this.rideRepository.create(rideData);
+    return this.rideRepository.save(ride);
   }
-  async find(query: any): Promise<Ride[]> {
-    return this.rideModel.find(query).exec();
+  async findRidesByFilters(
+    customerId: number,
+    driverId?: number,
+  ): Promise<Ride[]> {
+    const queryBuilder = this.rideRepository.createQueryBuilder('ride');
+
+    queryBuilder.where('ride.customer_id = :customerId', { customerId });
+
+    if (driverId) {
+      queryBuilder.andWhere('ride.driverId = :driverId', { driverId });
+    }
+
+    // Carregar informações do driver
+    queryBuilder.leftJoinAndSelect('ride.driver', 'driver');
+
+    return queryBuilder.getMany();
   }
 }

@@ -12,7 +12,7 @@ import { RideEstimateResponseDto } from '../dto/ride-estimate-response.dto';
 import { HttpService } from '@nestjs/axios';
 import { ConfirmRideDto } from '../dto/confirm-ride.dto';
 import { RideRepository } from '../ride.repository';
-import { Ride } from '../ride.schema';
+import { Ride } from '../ride.entity';
 
 @Injectable()
 export class RideService {
@@ -22,7 +22,7 @@ export class RideService {
     private readonly driverService: DriverService,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
-    private readonly rideReposirory: RideRepository,
+    private readonly rideRepository: RideRepository,
   ) {
     this.apiKey = this.configService.get<string>('GOOGLE_API_KEY');
   }
@@ -48,7 +48,7 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'SERVICE_UNAVAILABLE',
-          error_description:
+          message:
             'Erro ao calcular a rota. Não foi possível obter a rota da API.',
         },
         HttpStatus.SERVICE_UNAVAILABLE,
@@ -79,7 +79,7 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'INVALID_DATA',
-          error_description: 'Origem e destino não podem ser iguais.',
+          message: 'Origem e destino não podem ser iguais.',
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -95,7 +95,7 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'INVALID_DATA',
-          error_description: 'Erro ao obter coordenadas do Google Maps.',
+          message: 'Erro ao obter coordenadas do Google Maps.',
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -154,7 +154,7 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'INVALID_DATA',
-          error_description: 'Erro ao obter dados da API do Google Maps.',
+          message: 'Erro ao obter dados da API do Google Maps.',
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -186,46 +186,38 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'INVALID_DISTANCE',
-          error_description:
-            'Quilometragem inválida para o motorista selecionado.',
+          message: 'Quilometragem inválida para o motorista selecionado.',
         },
         HttpStatus.NOT_ACCEPTABLE,
       );
     }
     // Salvar os dados da viagem no banco de dados
-    await this.rideReposirory.saveRide(
+    await this.rideRepository.saveRide(
       this.mapConfirmRideDtoToRide(confirmRideDto),
     );
   }
 
-  async getRides(customerId: string, driverId?: string) {
-    const query: any = { customer_id: customerId };
-
-    if (driverId) {
-      query.driverId = driverId;
-    }
-
-    const rides = await this.rideReposirory.find(query);
-
-    // Add driver information
-    const enrichedRides = await Promise.all(
-      rides.map(async (ride) => {
-        const driver = await this.driverService.getDriverById(ride.driver_id);
-        return {
-          id: ride._id, // Use o `id` em vez de `_id` para simplificar
-          customer_id: ride.customer_id,
-          origin: ride.origin,
-          destination: ride.destination,
-          distance: ride.distance,
-          duration: ride.duration,
-          value: ride.value,
-          driver: {
-            id: driver.id,
-            name: driver.name,
-          },
-        };
-      }),
+  async getRides(customerId: number, driverId?: number) {
+    // Obtenha as corridas filtradas pelo repositório
+    const rides = await this.rideRepository.findRidesByFilters(
+      customerId,
+      driverId,
     );
+
+    // Enriquecer os dados com informações do driver, se necessário
+    const enrichedRides = rides.map((ride) => ({
+      id: ride.id,
+      customer_id: ride.customer_id,
+      origin: ride.origin,
+      destination: ride.destination,
+      distance: ride.distance,
+      duration: ride.duration,
+      value: ride.value,
+      driver: {
+        id: ride.driver?.id,
+        name: ride.driver?.name,
+      },
+    }));
 
     return enrichedRides;
   }
@@ -236,7 +228,7 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'INVALID_DATA',
-          error_description: 'Origem e destino não podem ser iguais.',
+          message: 'Origem e destino não podem ser iguais.',
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -245,13 +237,14 @@ export class RideService {
 
   mapConfirmRideDtoToRide(confirmRideDto: ConfirmRideDto): Ride {
     return {
+      id: null,
       customer_id: confirmRideDto.customer_id,
       origin: confirmRideDto.origin,
       destination: confirmRideDto.destination,
       distance: confirmRideDto.distance,
       duration: confirmRideDto.duration,
-      driver_id: confirmRideDto.driver.id,
       value: confirmRideDto.value,
+      driver: confirmRideDto.driver,
     } as Ride;
   }
 }

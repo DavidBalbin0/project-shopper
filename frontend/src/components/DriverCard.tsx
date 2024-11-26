@@ -10,17 +10,12 @@ interface DriverCardProps {
     rating: number;
     review: string;
     value: number;
+    handleChooseDriver: () => void;
 }
 
-const DriverCard: React.FC<DriverCardProps> = ({name, vehicle, description, rating, review, value}) => {
-    const navigate = useNavigate();
-
-    const handleNavigate = () => {
-        navigate('/ride-history');
-    };
-
+const DriverCard: React.FC<DriverCardProps> = ({name, vehicle, description, rating, review, value, handleChooseDriver}) => {
     return (
-        <Card>
+        <Card sx={{ width: '100%', borderRadius: 4, boxShadow: 10}}>
             <CardContent>
                 <Typography variant="h6">{name}</Typography>
                 <Typography variant="body2" color="text.secondary">{vehicle}</Typography>
@@ -28,7 +23,7 @@ const DriverCard: React.FC<DriverCardProps> = ({name, vehicle, description, rati
                 <Rating value={rating} readOnly/>
                 <Typography variant="body2" sx={{mt: 1}}>{review}</Typography>
                 <Typography variant="h6" sx={{mt: 2}}>R${value.toFixed(2)}</Typography>
-                <Button variant="contained" color="secondary" onClick={handleNavigate}>
+                <Button variant="contained" color="secondary" onClick={handleChooseDriver}>
                     Confirmar Viagem
                 </Button>
             </CardContent>

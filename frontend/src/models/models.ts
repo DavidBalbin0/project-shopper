@@ -5,7 +5,7 @@ export interface Review {
 }
 
 export interface Driver {
-    id: string;
+    id: number;
     name: string;
     description: string;
     vehicle: string;

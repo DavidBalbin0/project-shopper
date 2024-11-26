@@ -10,7 +10,7 @@ import { DriverDto } from './driver.dto';
 export class ConfirmRideDto {
   @IsNotEmpty({ message: 'O ID do cliente não pode estar vazio.' })
   @IsString({ message: 'O ID do cliente deve ser uma string.' })
-  customer_id: string;
+  customer_id: number;
 
   @IsNotEmpty({ message: 'O endereço de origem não pode estar vazio.' })
   @IsString({ message: 'O endereço de origem deve ser uma string.' })

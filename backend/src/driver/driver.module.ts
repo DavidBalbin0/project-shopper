@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
 import { DriverService } from './driver.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { DriverSchema } from './schemas/driver.schema';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Driver } from './driver.entity';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: 'Driver', schema: DriverSchema }]),
-  ],
+  imports: [TypeOrmModule.forFeature([Driver])],
   providers: [DriverService],
   exports: [DriverService],
 })
+
 export class DriverModule {}

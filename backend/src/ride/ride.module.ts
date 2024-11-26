@@ -5,14 +5,15 @@ import { DriverModule } from '../driver/driver.module';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
 import { RideRepository } from './ride.repository';
-import { MongooseModule } from '@nestjs/mongoose';
-import { RideSchema } from './ride.schema';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Driver } from '../driver/driver.entity';
+import { Ride } from './ride.entity';
 @Module({
   imports: [
     DriverModule,
     ConfigModule,
     HttpModule,
-    MongooseModule.forFeature([{ name: 'Ride', schema: RideSchema }]),
+    TypeOrmModule.forFeature([Driver, Ride]),
   ],
   providers: [RideService, RideRepository],
   controllers: [RideController],

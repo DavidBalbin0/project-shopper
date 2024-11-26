@@ -1,18 +1,19 @@
 // src/components/DriverList.tsx
 import React from 'react';
-import { Grid } from '@mui/material';
+import { Grid, List, ListItem } from '@mui/material';
 import DriverCard from './DriverCard';
 import {Driver} from "../models/models";
 
 interface DriverListProps {
     drivers: Driver[];
+    handleChooseDriver: (driverId: number) => void;
 }
 
-const DriverList: React.FC<DriverListProps> = ({ drivers }) => {
+const DriverList: React.FC<DriverListProps> = ({ drivers, handleChooseDriver }) => {
     return (
-        <Grid container spacing={2} justifyContent="center">
+        <List>
             {drivers.map(driver => (
-                <Grid item xs={12} sm={6} md={4} key={driver.id}>
+                <ListItem sx={{ padding: 0, paddingTop: 4}} key={driver.id}>
                     <DriverCard
                         name={driver.name}
                         vehicle={driver.vehicle}
@@ -20,10 +21,12 @@ const DriverList: React.FC<DriverListProps> = ({ drivers }) => {
                         rating={driver.review.rating}
                         review={driver.review.comment}
                         value={driver.value}
+                        handleChooseDriver={() => handleChooseDriver(driver.id)}
+
                     />
-                </Grid>
+                </ListItem>
             ))}
-        </Grid>
+        </List>
     );
 };
 

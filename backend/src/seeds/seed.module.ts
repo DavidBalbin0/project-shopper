@@ -1,14 +1,11 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-
 import { SeedService } from './seed.service';
-import { DriverSchema } from '../driver/schemas/driver.schema';
+import {Driver} from "../driver/driver.entity";
+import {TypeOrmModule} from "@nestjs/typeorm";
 
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: 'Driver', schema: DriverSchema }]),
-  ],
+  imports: [TypeOrmModule.forFeature([Driver])],
   providers: [SeedService],
 })
 export class SeedModule {}

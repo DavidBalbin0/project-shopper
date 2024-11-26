@@ -2,13 +2,18 @@ import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
     palette: {
+        background: {
+            default: '#d9d9d9',
+        },
         primary: {
-            main: '#2DA77A', // Cor principal (azul padrão)
+                main: '#59FF57',
+                dark: '#001C71',
         },
         secondary: {
-            main: '#2DA77A', // Cor secundária
-        },
-    },
+            main: '#323232',
+            light: '#D9D9D9'
+        }
+    }
 });
 
 export default theme;

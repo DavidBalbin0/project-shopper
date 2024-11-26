@@ -18,8 +18,8 @@ export class Driver {
   @Column({ type: 'float', default: 0 })
   review: number;
 
-    @Column({ nullable: true })
-    comment: string;
+  @Column({ nullable: true })
+  comment: string;
 
   @Column({ type: 'float', default: 0 })
   ratePerKm: number;

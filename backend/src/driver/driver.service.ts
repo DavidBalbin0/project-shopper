@@ -6,7 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Driver } from './driver.entity';
 
 @Injectable()
-export class DriverRepository {
+export class DriverService {
   constructor(
     @InjectRepository(Driver)
     private readonly driverRepository: Repository<Driver>,

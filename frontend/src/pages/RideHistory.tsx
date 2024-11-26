@@ -114,7 +114,7 @@ const RideHistory: React.FC = () => {
                                             Number(ride.duration.replace("s", "")) / 60
                                         )}
                                     </TableCell>
-                                    <TableCell>{ride.value.toFixed(2)}</TableCell>
+                                    <TableCell>{ride.value}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

@@ -1,37 +1,18 @@
 import React, {useState} from 'react';
 import { TextField, Button, Box, Typography, Alert } from '@mui/material';
-import {useNavigate} from "react-router-dom";
-import axios from 'axios';
-import * as zlib from "node:zlib";
+interface RequestRideFormProps {
+    onSubmit: (customerId: string, origin: string, destination: string) => void;
+    errorMessages?: string[];
+}
 
-const RequestRideForm:  React.FC = () => {
+const RequestRideForm:  React.FC<RequestRideFormProps> = ({ onSubmit, errorMessages}) => {
     const [customerId, setCustomerId] = useState('');
     const [origin, setOrigin] = useState('');
     const [destination, setDestination] = useState('');
-    const [error, setError] = useState<string | null>(null); // Estado para a mensagem de erro
-    const navigate = useNavigate();
 
-    const handleSubmit = async (event: React.FormEvent) => {
+    const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
-        setError(null); // Limpa o erro anterior antes de uma nova tentativa
-
-        try {
-            const response = await axios.post('http://localhost:8080/ride/estimate', {
-                customer_id: customerId,
-                origin,
-                destination,
-            });
-            navigate('/confirm-ride', { state: { options: response.data } });
-        } catch (error: any) {
-            if (error.response && error.response.data) {
-                // Define a mensagem de erro vinda da API
-                setError(error.response.data.error_description || 'Erro desconhecido.');
-            } else {
-                // Mensagem genérica para erros inesperados
-                setError('Erro ao conectar com o servidor. Tente novamente.');
-            }
-            console.error('Error estimating ride:', error);
-        }
+        onSubmit(customerId, origin, destination);
     };
 
     return (
@@ -39,9 +20,11 @@ const RequestRideForm:  React.FC = () => {
             <Typography variant="h5" gutterBottom>
                 Solicitar Viagem
             </Typography>
-            {error && (
+            {Array.isArray(errorMessages) && errorMessages.length > 0 && (
                 <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
+                    {errorMessages.map((msg, index) => (
+                        <div key={index}>{msg}</div>
+                    ))}
                 </Alert>
             )}
             <TextField

@@ -7,7 +7,7 @@ export class Ride {
   id: number;
 
   @Column()
-  customer_id: string;
+  customer_id: number;
 
   @Column()
   origin: string;

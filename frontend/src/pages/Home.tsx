@@ -48,13 +48,14 @@ const Home: React.FC = () => {
                 display: 'flex',
                 flexDirection: 'Column',
                 alignItems: 'center',
+                justifyContent: 'center',
                 borderBottomLeftRadius: 20,
                 borderBottomRightRadius: 20,
                 height: '70vh',
             }}>
 
 
-                <Typography variant="h3" align="center" gutterBottom sx={{color: 'white', mb: 15, mt: 5, fontWeight: ' bold'}}  >
+                <Typography variant="h3" align="center" gutterBottom sx={{color: 'white', mt: 5, fontWeight: ' bold'}}  >
                     Solicitação de Viagem
                 </Typography>
 

@@ -60,7 +60,7 @@ const ConfirmRide: React.FC = () => {
         <Box sx={{mb: 4}}>
 
             <Container sx={{
-                paddingTop: 8,
+                paddingTop: 3,
                 paddingBottom: 8,
                 bgcolor: 'secondary.main',
                 display: 'flex',
@@ -71,8 +71,8 @@ const ConfirmRide: React.FC = () => {
             }}>
 
 
-                <Box sx={{ width: '80%'}}>
-                    <Box sx={{display: 'flex', alignItems: 'center'}}>
+                <Box sx={{width: '80%'}}>
+                    <Box sx={{display: 'flex', alignItems: 'center', mb: 1}}>
                         <Box
                             onClick={() => navigate('/')}
 
@@ -89,7 +89,7 @@ const ConfirmRide: React.FC = () => {
                             <KeyboardBackspaceIcon fontSize='large'/>
 
                         </Box>
-                        <Typography variant='h3' sx={{color: 'white', width: '100%', fontWeight: 'bold'}}>
+                        <Typography variant='h3' sx={{color: 'white', width: '100%', fontWeight: 'bold', }}>
                             Sua viagem
                         </Typography>
                     </Box>
@@ -105,46 +105,65 @@ const ConfirmRide: React.FC = () => {
                         mt: 3,
                         padding: 4,
                         display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
+                        flexDirection: 'column',
                         bgcolor: 'primary.main',
                         borderRadius: 2,
                     }}>
-                        <Box>
-                            <Typography variant="h5" sx={{fontWeight: 'bold'}}>
-                                Distância Estimada
-                            </Typography>
-                            <Typography variant="h5" gutterBottom>
-                                {distance ? `${distance.toFixed(2)} km` : 'Carregando...'}
-                            </Typography>
-                            <Box sx={{display:'flex', marginTop:2}}>
-                                <Box>
-                                    <Typography variant="h6" sx={{fontWeight: 'bold'}}>
-                                        Local De Saída
-                                    </Typography>
-                                    <Typography variant="h6" gutterBottom>
-                                        {state.originString}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{bgcolor: 'secondary.main', width: 4,marginLeft: 2, marginRight:2, borderRadius:2}}></Box>
-                                <Box>
-                                    <Typography variant="h6" sx={{fontWeight: 'bold'}}>
-                                        Local de chegada
-                                    </Typography>
-                                    <Typography variant="h6" gutterBottom>
-                                        {state.destinationString}
-                                    </Typography>
-                                </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                bgcolor: 'primary.main',
+                                borderRadius: 2,
+                            }}>
+                            <Box>
+                                <Typography variant="h5" sx={{fontWeight: 'bold'}}>
+                                    Distância Estimada
+                                </Typography>
+                                <Typography variant="h5" gutterBottom>
+                                    {distance ? `${distance.toFixed(2)} km` : 'Carregando...'}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                <Typography variant="h5" sx={{fontWeight: 'bold'}}>
+                                    Tempo Estimado
+                                </Typography>
+                                <Typography variant="h5" gutterBottom>
+                                    {duration !== null ? `${duration} min` : 'Carregando...'}
+                                </Typography>
                             </Box>
                         </Box>
-                        <Box>
-                            <Typography variant="h5" sx={{fontWeight: 'bold'}}>
-                                Tempo Estimado
-                            </Typography>
-                            <Typography variant="h5" gutterBottom>
-                                {duration !== null ? `${duration} min` : 'Carregando...'}
-                            </Typography>
+                        <Box sx={{display: 'flex', flexDirection: 'row', marginTop: 2}}>
+                            <Box>
+                                <Typography variant="h6" sx={{fontWeight: 'bold'}}>
+                                    Saída
+                                </Typography>
+                                <Typography variant="h6" gutterBottom>
+                                    {state.originString}
+                                </Typography>
+                            </Box>
+                            <Box sx={{
+                                bgcolor: 'secondary.main',
+                                width: 4,
+                                marginLeft: 2,
+                                marginRight: 2,
+                                borderRadius: 2
+                            }}>
+                            </Box>
+                            <Box>
+                                <Typography variant="h6" sx={{fontWeight: 'bold'}}>
+                                    Chegada
+                                </Typography>
+                                <Typography variant="h6" gutterBottom>
+                                    {state.destinationString}
+                                </Typography>
+                            </Box>
+
+
+
                         </Box>
+
                     </Box>
 
                 </Box>

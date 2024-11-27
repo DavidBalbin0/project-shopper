@@ -48,7 +48,7 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'SERVICE_UNAVAILABLE',
-          message:
+          error_description:
             'Erro ao calcular a rota. Não foi possível obter a rota da API.',
         },
         HttpStatus.SERVICE_UNAVAILABLE,
@@ -79,7 +79,7 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'INVALID_DATA',
-          message: 'Origem e destino não podem ser iguais.',
+          error_description: 'Origem e destino não podem ser iguais.',
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -95,7 +95,7 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'INVALID_DATA',
-          message: 'Erro ao obter coordenadas do Google Maps.',
+          error_description: 'Erro ao obter coordenadas do Google Maps.',
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -154,7 +154,7 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'INVALID_DATA',
-          message: 'Erro ao obter dados da API do Google Maps.',
+          error_description: 'Erro ao obter dados da API do Google Maps.',
         },
         HttpStatus.BAD_REQUEST,
       );
@@ -186,7 +186,7 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'INVALID_DISTANCE',
-          message: 'Quilometragem inválida para o motorista selecionado.',
+          error_description: 'Quilometragem inválida para o motorista selecionado.',
         },
         HttpStatus.NOT_ACCEPTABLE,
       );
@@ -228,7 +228,7 @@ export class RideService {
       throw new HttpException(
         {
           error_code: 'INVALID_DATA',
-          message: 'Origem e destino não podem ser iguais.',
+          error_description: 'Origem e destino não podem ser iguais.',
         },
         HttpStatus.BAD_REQUEST,
       );

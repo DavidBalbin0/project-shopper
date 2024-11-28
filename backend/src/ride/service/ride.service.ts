@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { DriverService } from '../../driver/driver.service';
+import { DriverService } from '../../driver/service/driver.service';
 import { ConfigService } from '@nestjs/config';
 import { RideEstimateDto } from '../dto/ride-estimate.dto';
 import {
@@ -7,12 +7,13 @@ import {
   GeocodeResponse,
   RouteRequestBody,
   RouteResponse,
-} from '../model/Models';
+} from '../interface/Interface';
 import { RideEstimateResponseDto } from '../dto/ride-estimate-response.dto';
 import { HttpService } from '@nestjs/axios';
 import { ConfirmRideDto } from '../dto/confirm-ride.dto';
-import { RideRepository } from '../ride.repository';
-import { Ride } from '../ride.entity';
+import { RideRepository } from '../repository/ride.repository';
+import { Ride } from '../entity/ride.entity';
+import { CustomHttpException } from 'src/commom/exceptions/CustomHttpException';
 
 @Injectable()
 export class RideService {
@@ -44,22 +45,10 @@ export class RideService {
     );
 
     // verify if route is valid
-    if (!route || !route.routes || route.routes.length === 0) {
-      throw new HttpException(
-        {
-          error_code: 'SERVICE_UNAVAILABLE',
-          error_description:
-            'Erro ao calcular a rota. Não foi possível obter a rota da API.',
-        },
-        HttpStatus.SERVICE_UNAVAILABLE,
-      );
-    }
+    this.validateRoute(route);
 
-    const routeData = route.routes[0];
-
-    // Get the distance in km and duration
-    const distanceInKm = routeData.distanceMeters / 1000;
-    const duration = routeData.duration;
+    // Calculate distance and duration
+    const { distanceInKm, duration } = this.calculateDistanceAndDuration(route);
 
     const availableDrivers =
       await this.driverService.getAvailableDrivers(distanceInKm);
@@ -74,35 +63,51 @@ export class RideService {
     );
   }
 
-  private validateData(data: RideEstimateDto) {
-    if (data.origin === data.destination) {
-      throw new HttpException(
-        {
-          error_code: 'INVALID_DATA',
-          error_description: 'Origem e destino não podem ser iguais.',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
-
   // Function to get coordinates from an address using Google Geocode API
   async getCoordinatesFromAddress(address: string): Promise<Coordinates> {
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${this.apiKey}`;
 
     const response = await this.httpService.axiosRef.get<GeocodeResponse>(url);
     if (response.status !== 200 || response.data.results.length === 0) {
-      throw new HttpException(
-        {
-          error_code: 'INVALID_DATA',
-          error_description: 'Erro ao obter coordenadas do Google Maps.',
-        },
+      throw new CustomHttpException(
+        'INVALID_DATA',
+        ['Erro ao obter coordenadas do Google Maps.'],
         HttpStatus.BAD_REQUEST,
       );
     }
 
     // Return the coordinates
     return response.data.results[0].geometry.location;
+  }
+
+  private validateData(data: RideEstimateDto) {
+    if (data.origin === data.destination) {
+      throw new CustomHttpException(
+        'INVALID_DATA',
+        ['Origem e destino não podem ser iguais.'],
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  private validateRoute(route: RouteResponse): void {
+    if (!route || !route.routes || route.routes.length === 0) {
+      throw new CustomHttpException(
+        'SERVICE_UNAVAILABLE',
+        ['Erro ao calcular a rota. Não foi possível obter a rota da API.'],
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+  }
+
+  private calculateDistanceAndDuration(route: RouteResponse): {
+    distanceInKm: number;
+    duration: string;
+  } {
+    const routeData = route.routes[0];
+    const distanceInKm = routeData.distanceMeters / 1000;
+    const duration = routeData.duration;
+    return { distanceInKm, duration };
   }
 
   // Function to get route from Google Maps using the Directions API
@@ -163,76 +168,54 @@ export class RideService {
   }
 
   async confirmRide(confirmRideDto: ConfirmRideDto): Promise<void> {
-    const { distance, driver } = confirmRideDto;
-
-    // Validações
     this.validateOriginAndDestination(confirmRideDto);
 
-    // Verificar se o motorista é válido
-    const foundDriver = await this.driverService.validateDriver(driver.id);
-
-    if (!foundDriver) {
-      throw new HttpException(
-        {
-          error_code: 'DRIVER_NOT_FOUND',
-          error_description: 'Motorista não encontrado.',
-        },
-        HttpStatus.NOT_FOUND,
-      );
-    }
-
-    // Verificar se a quilometragem é válida para o motorista
-    if (foundDriver.minKm > distance) {
-      throw new HttpException(
-        {
-          error_code: 'INVALID_DISTANCE',
-          error_description: 'Quilometragem inválida para o motorista selecionado.',
-        },
-        HttpStatus.NOT_ACCEPTABLE,
-      );
-    }
-    // Salvar os dados da viagem no banco de dados
-    await this.rideRepository.saveRide(
-      this.mapConfirmRideDtoToRide(confirmRideDto),
-    );
-  }
-
-  async getRides(customerId: number, driverId?: number) {
-    // Obtenha as corridas filtradas pelo repositório
-    const rides = await this.rideRepository.findRidesByFilters(
-      customerId,
-      driverId,
+    // Verify if the driver is available
+    const foundDriver = await this.verifyDriverAvailability(
+      confirmRideDto.driver.id,
     );
 
-    // Enriquecer os dados com informações do driver, se necessário
-    const enrichedRides = rides.map((ride) => ({
-      id: ride.id,
-      customer_id: ride.customer_id,
-      origin: ride.origin,
-      destination: ride.destination,
-      distance: ride.distance,
-      duration: ride.duration,
-      value: ride.value,
-      driver: {
-        id: ride.driver?.id,
-        name: ride.driver?.name,
-      },
-    }));
+    this.verifyDriverDistance(foundDriver, confirmRideDto.distance);
 
-    return enrichedRides;
+    await this.saveRide(confirmRideDto);
   }
 
   private validateOriginAndDestination(data: ConfirmRideDto): void {
     const { origin, destination } = data;
     if (origin === destination) {
-      throw new HttpException(
-        {
-          error_code: 'INVALID_DATA',
-          error_description: 'Origem e destino não podem ser iguais.',
-        },
+      throw new CustomHttpException(
+        'INVALID_DATA',
+        ['Origem e destino não podem ser iguais.'],
         HttpStatus.BAD_REQUEST,
       );
     }
+  }
+
+  private async verifyDriverAvailability(driverId: number) {
+    const foundDriver = await this.driverService.validateDriver(driverId);
+    if (!foundDriver) {
+      throw new CustomHttpException(
+        'DRIVER_NOT_FOUND',
+        ['Motorista não encontrado.'],
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    return foundDriver;
+  }
+
+  private verifyDriverDistance(driver: any, distance: number): void {
+    if (driver.minKm > distance) {
+      throw new CustomHttpException(
+        'INVALID_DISTANCE',
+        ['Quilometragem inválida para o motorista selecionado.'],
+        HttpStatus.NOT_ACCEPTABLE,
+      );
+    }
+  }
+
+  private async saveRide(confirmRideDto: ConfirmRideDto): Promise<void> {
+    const ride = this.mapConfirmRideDtoToRide(confirmRideDto);
+    await this.rideRepository.saveRide(ride);
   }
 
   mapConfirmRideDtoToRide(confirmRideDto: ConfirmRideDto): Ride {
@@ -246,5 +229,67 @@ export class RideService {
       value: confirmRideDto.value,
       driver: confirmRideDto.driver,
     } as Ride;
+  }
+
+  async getRides(customerId: number, driverId?: number) {
+    this.validateCustomerId(customerId);
+    if (driverId) {
+      await this.validateDriverId(driverId);
+    }
+
+    const rides = await this.rideRepository.findRidesByFilters(
+      customerId,
+      driverId,
+    );
+    this.validateRides(rides);
+
+    return {
+      customer_id: customerId,
+      rides: rides.map((ride) => ({
+        id: ride.id,
+        customer_id: ride.customer_id,
+        origin: ride.origin,
+        destination: ride.destination,
+        distance: ride.distance,
+        duration: ride.duration,
+        value: ride.value,
+        driver: {
+          id: ride.driver.id,
+          name: ride.driver.name,
+        },
+        date: ride.created_at,
+      })),
+    };
+  }
+
+  private validateCustomerId(customerId: number) {
+    if (!customerId) {
+      throw new CustomHttpException(
+        'INVALID_CUSTOMER',
+        ['O id do usuário não pode estar vazio.'],
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
+  private async validateDriverId(driverId: number) {
+    const isDriverValid = await this.driverService.validateDriver(driverId);
+    if (!isDriverValid) {
+      throw new CustomHttpException(
+        'INVALID_DRIVER',
+        ['O id do motorista fornecido é inválido.'],
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  private validateRides(rides: Ride[]) {
+    if (!rides || rides.length === 0) {
+      throw new CustomHttpException(
+        'NO_RIDES_FOUND',
+        ['Nenhuma corrida encontrada para este usuário.'],
+        HttpStatus.NOT_FOUND,
+      );
+    }
   }
 }

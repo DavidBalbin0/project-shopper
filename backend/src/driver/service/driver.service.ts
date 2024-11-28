@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
-import { AvailableDriver } from '../ride/model/Models';
+import { AvailableDriver } from '../../ride/interface/Interface';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Driver } from './driver.entity';
+import { Driver } from '../entity/driver.entity';
 
 @Injectable()
 export class DriverService {
@@ -12,12 +12,12 @@ export class DriverService {
     private readonly driverRepository: Repository<Driver>,
   ) {}
 
-  async getAllDrivers(): Promise<Driver[]> {
+  async findAll(): Promise<Driver[]> {
     return this.driverRepository.find();
   }
 
   async getAvailableDrivers(distanceInKm: number): Promise<AvailableDriver[]> {
-    const drivers = await this.getAllDrivers();
+    const drivers = await this.findAll();
 
     return drivers
       .filter((driver) => distanceInKm >= driver.minKm)

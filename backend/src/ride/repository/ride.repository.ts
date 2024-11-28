@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { InjectRepository } from '@nestjs/typeorm';
-import { Ride } from './ride.entity';
+import { Ride } from '../entity/ride.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -18,18 +18,20 @@ export class RideRepository {
   async findRidesByFilters(
     customerId: number,
     driverId?: number,
+    orderBy: string = 'created_at',
+    orderDirection: 'ASC' | 'DESC' = 'DESC',
   ): Promise<Ride[]> {
-    const queryBuilder = this.rideRepository.createQueryBuilder('ride');
-
-    queryBuilder.where('ride.customer_id = :customerId', { customerId });
+    const query = this.rideRepository
+      .createQueryBuilder('ride')
+      .leftJoinAndSelect('ride.driver', 'driver')
+      .where('ride.customer_id = :customerId', { customerId });
 
     if (driverId) {
-      queryBuilder.andWhere('ride.driverId = :driverId', { driverId });
+      query.andWhere('ride.driver.id = :driverId', { driverId });
     }
 
-    // Carregar informações do driver
-    queryBuilder.leftJoinAndSelect('ride.driver', 'driver');
+    query.orderBy(`ride.${orderBy}`, orderDirection);
 
-    return queryBuilder.getMany();
+    return await query.getMany();
   }
 }

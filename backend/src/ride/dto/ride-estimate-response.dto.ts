@@ -1,4 +1,4 @@
-import { AvailableDriver, Coordinates, RouteResponse } from '../model/Models';
+import { AvailableDriver, Coordinates, RouteResponse } from '../interface/Interface';
 
 export class RideEstimateResponseDto {
   constructor(

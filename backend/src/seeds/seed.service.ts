@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Driver } from '../driver/driver.entity';
+import { Driver } from '../driver/entity/driver.entity';
 import { driversSeed } from './data/drivers.seed';
 
 @Injectable()

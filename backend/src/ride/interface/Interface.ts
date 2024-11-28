@@ -1,5 +1,3 @@
-import { Review } from '../../driver/schemas/driver.schema';
-
 export interface Coordinates {
   lat: number;
   lng: number;
@@ -22,6 +20,11 @@ export interface AvailableDriver {
   vehicle: string;
   review: Review;
   value: number;
+}
+
+interface Review {
+  rating: number;
+  comment: string;
 }
 
 export interface RouteResponse {

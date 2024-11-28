@@ -1,5 +1,5 @@
 // src/pages/ConfirmRide.tsx
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {Box, Container, Typography} from '@mui/material';
 import Map from "../components/Map";
 import DriverList from "../components/DriverList";
@@ -10,10 +10,26 @@ import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace';
 
 const ConfirmRide: React.FC = () => {
     const [errorMessages, setErrorMessages] = React.useState<string[]>([]);
+    const [googleApiKey, setGoogleApiKey] = useState<string | null>(null);
     const {state} = useLocation();
     const navigate = useNavigate();
 
     const rideResponse: EstimateRideResponse = state?.options;
+
+    useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                const response = await axios.get('/api/config'); // Endpoint que criamos
+                setGoogleApiKey(response.data.googleApiKey);
+                console.log(response.data)
+                console.log(response.data.googleApiKey)
+            } catch (error) {
+                console.error('Erro ao carregar a chave da API:', error);
+            }
+        };
+
+        fetchConfig();
+    }, []);
 
     if (!rideResponse) {
         return (
@@ -26,16 +42,16 @@ const ConfirmRide: React.FC = () => {
     const distance = rideResponse.distance;
     const durationString = rideResponse.duration;
     const duration = durationString ? Math.floor(Number(durationString.replace('s', '')) / 60) : null;
-
+    console.log(process.env.REACT_APP_GOOGLE_API_KEY)
     const handleChooseDriver = async (driverId: number) => {
         try {
-            const response = await axios.patch('http://localhost:8080/ride/confirm',
+            const response = await axios.patch('/api/ride/confirm',
                 {
                     customer_id: state.customerId,
                     origin: state.originString,
                     destination: state.destinationString,
                     distance: distance,
-                    duration: duration,
+                    duration: durationString,
                     driver: {
                         id: driverId,
                         name: rideResponse.options.find(driver => driver.id === driverId)?.name
@@ -45,13 +61,15 @@ const ConfirmRide: React.FC = () => {
                 }
             );
             console.log(response.data);
-            navigate('/ride-history'); // Redireciona para o histórico de viagens
+            navigate('/ride-history');
         } catch (error: any) {
             if (error.response && error.response.data) {
                 setErrorMessages(error.response.data.message);
+
             } else {
                 setErrorMessages(['Erro ao conectar com o servidor. Tente novamente.']);
             }
+            alert(errorMessages)
             console.error('Error confirm driver:', error);
         }
     };
@@ -98,7 +116,7 @@ const ConfirmRide: React.FC = () => {
                         origin={rideResponse.origin}
                         destination={rideResponse.destination}
                         encodedPolyline={rideResponse.routeResponse?.routes[0]?.polyline?.encodedPolyline}
-                        apiKey={"AIzaSyCh-dcwXf1nnMd5YBDkrzVZB111O7NddM8"}
+                        apiKey={googleApiKey}
                     />
 
                     <Box sx={{

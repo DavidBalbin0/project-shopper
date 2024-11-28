@@ -16,47 +16,60 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import {Driver} from "../models/models";
+import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
+import {useNavigate} from "react-router-dom";
 
 interface Ride {
-    date: string;
     driverName: string;
     origin: string;
     destination: string;
     distance: number;
     duration: string;
     value: number;
-    driver: Driver
+    driver: Driver,
+    date: string;
 }
 
 const RideHistory: React.FC = () => {
     const [userId, setUserId] = useState("");
     const [driverFilter, setDriverFilter] = useState("all");
     const [rides, setRides] = useState<Ride[]>([]);
-    const [drivers, setDrivers] = useState<string[]>([
-        "Bart Simpson",
-        "Homer Simpson",
-        "Marge Simpson",
-    ]);
+    const [drivers, setDrivers] = useState<Driver[]>([]);
+    const navigate = useNavigate();
 
     const handleFetchRides = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/ride/${userId}`, {
+            const response = await axios.get(`/api/ride/${userId}`, {
                 params: {
                     driver_id: driverFilter === "all" ? undefined : driverFilter,
                 },
             });
 
-            console.log("Dados recebidos da API:", response.data); // Inspecione os dados
-            setRides(response.data.rides); // Atualize o estado
+            console.log("Dados recebidos da API:", response.data);
+            setRides(response.data.rides);
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                alert(error.response.data.error_description);
+            } else {
+                alert(['Erro ao conectar com o servidor. Tente novamente.']);
+            }
+            console.error('Error estimating ride:', error);
+        }
+    };
+
+    const fetchDrivers = async () => {
+        try {
+            const response = await axios.get("/api/drivers");
+            setDrivers(response.data);
         } catch (error) {
-            console.error("Erro ao buscar histórico de viagens:", error);
-            alert("Erro ao buscar o histórico de viagens. Tente novamente.");
+            console.error("Erro ao buscar motoristas:", error);
+            alert("Erro ao buscar motoristas. Tente novamente.");
         }
     };
 
     useEffect(() => {
-        console.log("Estado rides atualizado:", rides);
-    }, [rides]); // Log para verificar mudanças no estado
+        fetchDrivers();
+    }, []);
 
     return (
         <Box sx={{}}>
@@ -71,10 +84,28 @@ const RideHistory: React.FC = () => {
                     borderBottomRightRadius: 20,
 
                 }}>
+                <Box sx={{display: 'flex', alignItems: 'center', mb: 3}}>
+                    <Box
+                        onClick={() => navigate('/')}
 
-                <Typography variant="h4" gutterBottom sx={{color: 'white'}}>
-                    Histórico de Viagens
-                </Typography>
+                        sx={{
+                            bgcolor: 'white',
+                            borderRadius: 2,
+                            display: 'flex',
+                            alignItems: 'center',
+                            paddingInline: 1,
+                            height: '100%',
+                            mr: 2,
+                            cursor: 'pointer',
+                        }}>
+                        <KeyboardBackspaceIcon fontSize='large'/>
+
+                    </Box>
+
+                    <Typography variant="h4" gutterBottom sx={{color: 'white', mb: 0}}>
+                        Histórico de Viagens
+                    </Typography>
+                </Box>
                 <Box sx={{display: "flex", gap: 2, mb: 3}}>
                     <TextField
                         label="ID do Usuário"
@@ -159,8 +190,8 @@ const RideHistory: React.FC = () => {
                     >
                         <MenuItem value="all">Todos</MenuItem>
                         {drivers.map((driver) => (
-                            <MenuItem key={driver} value={driver}>
-                                {driver}
+                            <MenuItem key={driver.id} value={driver.id}>
+                                {driver.name}
                             </MenuItem>
                         ))}
                     </TextField>
@@ -189,7 +220,7 @@ const RideHistory: React.FC = () => {
                             <TableBody>
                                 {rides.map((ride, index) => (
                                     <TableRow key={index}>
-                                        <TableCell>{ride.date}</TableCell>
+                                        <TableCell>{new Date(ride.date).toLocaleString()}</TableCell>
                                         <TableCell>{ride.driver.name}</TableCell>
                                         <TableCell>{ride.origin}</TableCell>
                                         <TableCell>{ride.destination}</TableCell>

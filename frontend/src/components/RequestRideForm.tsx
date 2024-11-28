@@ -12,7 +12,7 @@ const RequestRideForm:  React.FC<RequestRideFormProps> = ({ onSubmit, errorMessa
 
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
-        onSubmit(customerId, origin, destination);
+        onSubmit(customerId!, origin, destination);
     };
 
     return (

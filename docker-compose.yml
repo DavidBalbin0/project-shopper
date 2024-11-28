@@ -21,41 +21,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "80:3000"
+      - "80:80"
     volumes:
       - ./frontend:/app
-    command: npm start
-
-  mongodb:
-    image: mongo:6.0
-    container_name: mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: shopperdb
     networks:
       - shopper-network
-
-  mongo-express:
-    image: mongo-express:latest
-    container_name: mongo-express
-    ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
-      ME_CONFIG_MONGODB_ADMINPASSWORD: password
-      ME_CONFIG_MONGODB_SERVER: mongodb
-      ME_CONFIG_SITE_BASEURL: "/"
-      ME_CONFIG_SITE_PORT: 8081
-    networks:
-      - shopper-network
-
-
+    depends_on:
+      - backend
 
   postgres:
     image: postgres:15
@@ -78,5 +50,4 @@ networks:
     driver: bridge
 
 volumes:
-  mongodb_data:
   postgres_data:

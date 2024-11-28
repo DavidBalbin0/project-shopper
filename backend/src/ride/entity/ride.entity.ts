@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Driver } from '../driver/driver.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Driver } from '../../driver/entity/driver.entity';
 
 @Entity()
 export class Ride {
@@ -26,4 +26,7 @@ export class Ride {
 
   @ManyToOne(() => Driver, (driver) => driver.rides)
   driver: Driver;
+
+  @CreateDateColumn({ type: 'timestamp' })
+  created_at: Date;
 }

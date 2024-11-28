@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { SeedService } from './seed.service';
-import {Driver} from "../driver/driver.entity";
+import {Driver} from "../driver/entity/driver.entity";
 import {TypeOrmModule} from "@nestjs/typeorm";
 
 

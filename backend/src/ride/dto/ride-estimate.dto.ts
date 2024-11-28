@@ -1,9 +1,9 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import {IsNotEmpty, IsNumber, IsString} from 'class-validator';
 
 export class RideEstimateDto {
   @IsNotEmpty({ message: 'O ID do cliente não pode estar vazio.' })
-  @IsString({ message: 'O ID do cliente deve ser uma string.' })
-  customer_id: string;
+  @IsNumber({}, { message: 'O ID do cliente deve ser um número.' })
+  customer_id: number;
 
   @IsNotEmpty({ message: 'O endereço de origem não pode estar vazio.' })
   @IsString({ message: 'O endereço de origem deve ser uma string.' })

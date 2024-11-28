@@ -5,7 +5,7 @@ interface MapProps {
     origin: { lat: number; lng: number };
     destination: { lat: number; lng: number };
     encodedPolyline: string;
-    apiKey: string;
+    apiKey: string | null;
 }
 
 const Map: React.FC<MapProps> = ({ origin, destination, encodedPolyline, apiKey }) => {

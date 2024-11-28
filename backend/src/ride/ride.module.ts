@@ -4,10 +4,10 @@ import { RideController } from './controller/ride.controller';
 import { DriverModule } from '../driver/driver.module';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
-import { RideRepository } from './ride.repository';
+import { RideRepository } from './repository/ride.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Driver } from '../driver/driver.entity';
-import { Ride } from './ride.entity';
+import { Driver } from '../driver/entity/driver.entity';
+import { Ride } from './entity/ride.entity';
 @Module({
   imports: [
     DriverModule,
